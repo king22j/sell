@@ -1,6 +1,7 @@
+
 import requests
 
-# Kopyaladığın CSFloat API anahtarını buraya yapıştır (Tırnak işaretlerini silme!)
+# Kopyaladığın CSFloat API anahtarını buraya yapıştır
 CSFLOAT_API_KEY = "TvSzCKhgjj-KzrPML-1JjIaZB6OlSDgv"
 
 ITEMS_TO_CHECK = [
@@ -9,13 +10,13 @@ ITEMS_TO_CHECK = [
 ]
 
 def get_skinport_prices():
-    # Skinport tüm CS2 eşyalarını tek seferde çekmemizi ister, bu daha güvenlidir.
     url = "https://api.skinport.com/v1/items?app_id=730&currency=USD"
+    # Skinport'un istediği Brotli sıkıştırmasını kabul ettiğimizi belirtiyoruz
+    headers = {"Accept-Encoding": "br"} 
     try:
-        response = requests.get(url)
+        response = requests.get(url, headers=headers)
         data = response.json()
         
-        # Eğer dönen veri bir liste ise (başarılıysa)
         if isinstance(data, list):
             prices = {}
             for item in data:
@@ -40,14 +41,13 @@ def get_csfloat_price(item_name):
         response = requests.get(url, headers=headers)
         data = response.json()
         
-        # Eğer gelen veri bir listeyse ve içi boş değilse fiyatı al
+        # Eğer veri bir listeyse (Başarılı senaryo)
         if isinstance(data, list) and len(data) > 0:
             return data[0]['price'] / 100 
-        # Eğer API bir hata mesajı döndürdüyse (örn: API anahtarı yanlışsa)
-        elif isinstance(data, dict) and 'message' in data:
-            print(f"CSFloat API Hatası ({item_name}): {data['message']}")
+            
+        # Eğer farklı bir formatta hata veya veri döndürdüyse bunu EKRANA YAZDIR
         else:
-            print(f"CSFloat'ta satışta eşya bulunamadı: {item_name}")
+            print(f"CSFloat Ham Yanıt ({item_name}): {data}")
             
     except Exception as e:
         print(f"CSFloat bağlantı hatası ({item_name}): {e}")
@@ -59,7 +59,11 @@ def main():
     
     print("Skinport fiyatları toplu olarak çekiliyor, lütfen bekleyin...")
     skinport_all_prices = get_skinport_prices()
-    print("Skinport verileri alındı.\n")
+    
+    if skinport_all_prices:
+        print("Skinport verileri başarıyla alındı.\n")
+    else:
+        print("Skinport verileri alınamadı!\n")
     
     for item in ITEMS_TO_CHECK:
         print(f"Eşya: {item}")
